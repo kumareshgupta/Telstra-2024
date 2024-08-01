@@ -1,0 +1,672 @@
+1. MongoDB server downloaded and installed - msi 
+2. Mongo Shell downloaded and unzipped in C:\Program Files\MongoDB
+3. Env Path for Mongo Shell C:\Program Files\MongoDB\mongosh-1.10.5-win32-x64\bin
+4. Open command prompt and type mongosh
+
+create a database
+use <database name>
+
+database ----> collections --------> documents
+
+db.getName() -> show current db
+
+db.createCollection('movies')
+
+db.movies.find()
+
+db.movies.insert({'name':'Bahubali', 'category':'Action', 'year':2011, 'revenue':1500})
+DeprecationWarning: Collection.insert() is deprecated. Use insertOne, insertMany, or bulkWrite.
+
+insertOne
+db.movies.insertOne({'name':'Bahubali 2', 'category':'Action', 'year':2014, 'revenue':1600})
+
+insertMany
+db.movies.insertMany([
+{'name':'Kantara', 'category':'Action', 'year':2022, 'revenue':500}, 
+{'name':'Sholay', 'category':'Action', 'year':1972, 'revenue':100}, 
+{'name':'Drishyam', 'category':'Thriller', 'year':2022, 'revenue':600},
+{'name':'Bahubali 2', 'category':'Action', 'year':2020, 'revenue':500}, 
+{'name':'Gadar 2', 'category':'Action', 'year':2023, 'revenue':1000}, 
+{'name':'Bhediya', 'category':'Thriller', 'year':2023, 'revenue':660}
+])
+
+
+db.movies.insertOne({_id: 1 , 'name':'Bahubali 2', 'category':'Action', 'year':2014, 'revenue':1600})
+
+db.movies.insertOne({_id: 4 , 'title':'Zanjeer', 'category':'Action', 'year':2014, 'revenue':1600, 'producer':'Rajmouli'})
+
+db.movies.insertOne({_id: 5 , 'title':'Tanahji', 'category':['Action', 'History'], 'year':2019, 'revenue':1600, 'producer':'Rajmouli'})
+
+
+Update - Deprecated
+
+updateOne
+updateMany
+
+db.movies.updateOne({'_id': 5},{$set:{'title':'The Great One'}})
+
+db.movies.updateMany({},{$set:{language:'Sanskrit'}})
+
+db.movies.updateOne({'name':'Kantara'},{$set:{'language':'Kannada'}})
+
+
+db.movies.find({'name':'Kantara'})
+
+db.movies.updateOne({'name':'Bahubali 2'},{$set:{'language':'Telgu', 'year':2020}})
+
+
+Change field name
+db.movies.updateMany({},{$rename:{'name':'title'}})
+
+Dropping a field in a document of a collection
+db.movies.updateMany({},{$unset:{'title':''}})
+
+
+upsert = update + insert
+
+
+db.movies.updateMany( {'title':'Drishyam 2'}, {'$set':{'revenue':999}}, {'upsert':true})
+
+Use $setOnInsert when you want to set default values or initialize fields 
+only during the insertion of new documents. 
+Use $set for regular updates that may or may not result in new document insertions.
+21
+db.movies.updateOne( 
+	{'title':'Jailer'},{'$set':{'revenue':999} , '$setOnInsert':{	'category':'Action','year':2023,'language':'Tamil'}},
+	{'upsert':true})
+
+
+db.movies.updateOne( {'title':'Jailer'}, {$set:{'revenue':9999}, $setOnInsert:{ 'category':'Action', 'year':2023, 'language':'Tamil'} },{'upsert':true})
+
+db.movies.find({'revenue':{$gt:500}})
+
+$gt - greater then
+$gte - greater then or equal to
+$lt - less then
+$lte - less then or equal to
+$ne - not equals to
+
+1. find out how many movies which released in or after 2014
+
+
+db.movies.find({'year':{$gte:2014}}).count()
+
+2. find out movies which was released after 2000 and before 2010
+
+db.movies.find({'year':{$gt:2000, $lt:2010}})
+
+
+
+3. movies which was released in year 2010 and afterwards
+
+
+Logical operators - AND OR
+
+
+4. show details of all action movies which were released in 2020 or afterwards
+
+db.movies.find({$and: [{'category':'Action'}, {'year':{$gte:2020}}]})
+
+
+5. List all the movies either  not released in 2020 or having category thriller
+
+db.movies.find({$or: [{'category':'Thriller'}, {'year':{$ne:2020}}]})
+
+
+6. List all the movies which were (not release in 1995) and  (category is action or revenue is greater than 550)
+
+db.movies.find({$and:[{'year':{$ne:1995}}, 
+    {$or:[{'category':'Action'}, {'revenue':{$gt:550}}]}]});
+
+db.movies.find({'year':{$ne:1995}, $or:[{'category':'Action'}, {'revenue':{$gt:550}}]});
+
+
+
+
+Projection =================================
+
+to display selected fields
+
+db.movies.find({})
+
+db.movies.find({}, {'_id':0, 'title':1, 'category':1})
+
+
+
+
+
+
+
+db.movies.find({'year': {$gt:2020}}, {'_id':0, 'title':1, 'category':1})
+db.movies.find({'year': {$gt:2020}}, {'_id':0, 'title':1})
+
+
+
+Reference :
+https://www.mongodb.com/docs/mongodb-shell/crud/read/
+
+
+===========Aggregation Pipeline ===========================
+
+The aggregation pipeline in MongoDB is a powerful framework that 
+allows you to process and transform data in complex ways within the 
+database. It enables you to perform a series of data processing 
+operations on a collection's documents to aggregate, filter, 
+transform, and manipulate data according to your specific requirements.
+
+
+
+aggregate(pipeline, options)
+groups data records and compute results
+
+db.movies.aggregate({$group:{_id:'$category', total_revenue:{$sum:'$revenue'}}})
+
+operators :-
+$sum
+$max
+$min
+$avg
+
+$project
+$group
+$match
+$push
+$slice
+$lookup
+
+
+1. Count the Number of Movies in Each Category
+
+db.movies.aggregate([
+  {
+    $group: {
+      _id: "$category",
+      count: { $sum: 1 }
+    }
+  }
+])
+
+2. Calculate the Total Revenue by Category
+
+db.movies.aggregate([
+  {
+    $group: {
+      _id: "$category",
+      totalRevenue: { $sum: "$revenue" }
+    }
+  }
+])
+
+===================================================================================
+The $match stage in MongoDB's aggregation framework is used to filter 
+documents in a collection based on specified criteria. It is 
+equivalent to the find operation in regular queries but is used 
+within an aggregation pipeline to pass only the matching documents to 
+the subsequent stages.
+===================================================================================
+
+3. Find the Average Revenue for Movies Released in 2022
+db.movies.aggregate([
+  {
+    $match: {
+      year: 2022
+    }
+  },
+  {
+    $group: {
+      _id: "$year",
+      averageRevenue: { $avg: "$revenue" }
+    }
+  }
+])
+
+Above query with rounding average revenue to 2 decimal place
+
+db.movies.aggregate([
+  {
+    $match: {
+      year: 2022
+    }
+  },
+  {
+    $group: {
+      _id: "$year",
+      averageRevenue: { $avg: "$revenue" }
+    }
+  },
+  {
+    $project: {
+        year: 1,
+        roundedRevenue: {$round:["$averageRevenue", 2]}
+    }
+  }
+])
+
+
+$project: { name: 1, roundedRevenue: { $round: ["$revenue", 2] }, _id: 0 }
+
+
+
+===================================================================================
+The $push operator in MongoDB is used within the $group stage of 
+an aggregation pipeline to append values to an array. It effectively 
+creates an array that accumulates values from multiple documents that 
+are grouped together.
+===================================================================================
+Example :
+Find the group of titles based on category
+
+db.movies.aggregate([
+  {
+    $group: {
+      _id: "$category",
+      movieNames: { $push: "$title" }
+    }
+  }
+])
+
+db.movies.aggregate([
+  { $match: { category: 'Action' } },
+  { $group: { _id: "$category", moviesList: { $push: "$title" } } },
+  { $project: { category: 1, firstTwoMovies: { $slice: ["$moviesList", 2] }, _id: 0 } }
+])
+
+
+
+Find the Top 2 Highest-Grossing Movies
+
+db.movies.aggregate([
+  { $sort: { revenue: -1 } },  
+  { $limit: 2 },               
+  { $project: { title: 1, revenue: 1, _id: 0 } }  
+])
+
+4. Find the Top 2 Highest-Grossing Movies in Each Category
+db.movies.aggregate([
+  {
+    $sort: { revenue: -1 }
+  },
+  {
+    $group: {
+      _id: "$category",
+      topMovies: {
+        $push: {
+          name: "$title",
+          revenue: "$revenue"
+        }
+      }
+    }
+  },
+  {
+    $project: {
+      _id: 1,
+      topMovies: { $slice: ["$topMovies", 2] }
+    }
+  }
+])
+
+Calculate the Total and Average Revenue for Movies Grouped by Year 
+and Category
+
+db.movies.aggregate([
+  {
+    $group: {
+      _id: { year: "$year", category: "$category" },
+      totalRevenue: { $sum: "$revenue" },
+      averageRevenue: { $avg: "$revenue" }
+    }
+  }
+])
+======================================================================
+The $project stage in MongoDB's aggregation framework is used to 
+include, exclude, or reshape fields in the documents that pass 
+through the aggregation pipeline. It allows you to control which 
+fields appear in the output and how they are formatted or calculated.
+======================================================================
+db.movies.aggregate([
+  { $project: { name: 1, year: 1, _id: 0 } }
+])
+
+db.movies.aggregate([
+  { $project: { movieTitle: "$name", releaseYear: "$year", _id: 0 } }
+])
+
+
+db.movies.aggregate([
+  { $project: { movieTitle: "$name", releaseYear: "$year", _id: 0 } }
+])
+
+db.movies.aggregate([
+  { $project: { name: 1, doubleRevenue: { $multiply: ["$revenue", 2] }, _id: 0 } }
+])
+
+db.movies.aggregate([
+  { $project: { name: 1, roundedRevenue: { $round: ["$revenue", 2] }, _id: 0 } }
+])
+
+
+
+Write a MongoDB aggregation query to find the total revenue generated 
+by movies in the "Action" category. The result should only include 
+the total revenue and the category name. The output should not 
+include the default _id field.
+
+
+db.movies.aggregate([{$match : {'category':'Action'}},
+ {$group:{_id:'$category', total_revenue:{$sum:'$revenue'}}},  
+{$project : {'category':1, 'total_revenue':1 }}
+])
+
+db.movies.aggregate([
+  { $match: { 'category': 'Action' } },
+  { $group: { _id: '$category', total_revenue: { $sum: '$revenue' } } },
+  { $project: { 'category': '$_id', 'total_revenue': 1, _id: 0 } }
+])
+
+
+#######################################################################
+Aggregation Pipeline Activity
+
+Create a collection of document with below keys 
+{employeeid:number,employee_first_name:text,employee_last_name:text,
+department:text,designation:text,basic_salary:number,
+dearness_allowance:number,hra:number,pf:number,gross_salary:number,
+net_salary:number}
+
+Departments to be used : Accounts,Sales,Training,IT
+
+Designations to be used : Asst Manager ,Team Leader,Manager,Staff
+
+You are in support of HR department and have to allocate each of 
+below give employees to above departments
+
+Erric Jones,Simond Touffel,Bruce Wayne,Klarke Kentt,Will Wade,
+Erric Bana,Tom Bruth
+
+The Salary has to be in range for different heads as 
+basic  12000 to 13000
+da 500 to 700
+hra 300 to 400
+pf 200 to 400
+gross salary 15000 to 25000
+net salary 11000 to 15000
+
+
+=============================================================
+Create summary using aggregation for below requirements 
+total basic based on  department and designation
+total da based on department and designation 
+avg hra based on department and designation 
+employee getting maximum net salary 
+employee getting minimum net salary 
+count of employee based on department and designation
+
+==========================================================
+
+Solution : 
+ Step 1: Create the Collection
+
+You need to create a MongoDB collection with documents that have the 
+following structure:
+
+{
+    employeeid: <number>,
+    employee_first_name: "<text>",
+    employee_last_name: "<text>",
+    department: "<text>",
+    designation: "<text>",
+    basic_salary: <number>,
+    dearness_allowance: <number>,
+    hra: <number>,
+    pf: <number>,
+    gross_salary: <number>,
+    net_salary: <number>
+}
+
+Different departments: Accounts, Sales, Training, IT
+
+Different designations: Asst Manager, Team Leader, Manager, Staff
+
+Employees: Erric Jones, Simond Touffel, Bruce Wayne, Klarke Kentt, Will Wade, Erric Bana, Tom Bruth
+
+ 
+Step 2: Populate the Collection with Sample Data
+
+
+db.employees.insertMany([
+    {
+        employeeid: 1,
+        employee_first_name: "Erric",
+        employee_last_name: "Jones",
+        department: "Accounts",
+        designation: "Manager",
+        basic_salary: 12500,
+        dearness_allowance: 1500,
+        hra: 350,
+        pf: 300,
+        gross_salary: 17000,
+        net_salary: 13500
+    },
+    {
+        employeeid: 2,
+        employee_first_name: "Simond",
+        employee_last_name: "Touffel",
+        department: "Sales",
+        designation: "Team Leader",
+        basic_salary: 13000,
+        dearness_allowance: 1700,
+        hra: 400,
+        pf: 250,
+        gross_salary: 18900,
+        net_salary: 14300
+    },
+    {
+        employeeid: 3,
+        employee_first_name: "Bruce",
+        employee_last_name: "Wayne",
+        department: "Training",
+        designation: "Asst Manager",
+        basic_salary: 12300,
+        dearness_allowance: 1200,
+        hra: 380,
+        pf: 200,
+        gross_salary: 16080,
+        net_salary: 12000
+    },
+    {
+        employeeid: 4,
+        employee_first_name: "Klarke",
+        employee_last_name: "Kentt",
+        department: "IT",
+        designation: "Staff",
+        basic_salary: 12700,
+        dearness_allowance: 2000,
+        hra: 320,
+        pf: 400,
+        gross_salary: 18620,
+        net_salary: 14100
+    },
+    {
+        employeeid: 5,
+        employee_first_name: "Will",
+        employee_last_name: "Wade",
+        department: "Accounts",
+        designation: "Team Leader",
+        basic_salary: 12100,
+        dearness_allowance: 1100,
+        hra: 370,
+        pf: 300,
+        gross_salary: 16270,
+        net_salary: 11800
+    },
+    {
+        employeeid: 6,
+        employee_first_name: "Erric",
+        employee_last_name: "Bana",
+        department: "IT",
+        designation: "Manager",
+        basic_salary: 12900,
+        dearness_allowance: 1900,
+        hra: 360,
+        pf: 350,
+        gross_salary: 18710,
+        net_salary: 13900
+    },
+    {
+        employeeid: 7,
+        employee_first_name: "Tom",
+        employee_last_name: "Bruth",
+        department: "Sales",
+        designation: "Staff",
+        basic_salary: 12200,
+        dearness_allowance: 1300,
+        hra: 390,
+        pf: 250,
+        gross_salary: 16740,
+        net_salary: 13000
+    }
+]);
+
+
+Step 3: Aggregation Pipeline Queries
+
+1. Total Basic Salary Based on Department and Designation
+
+db.employees.aggregate([
+    {
+        $group: {
+            _id: { department: "$department", designation: "$designation" },
+            total_basic_salary: { $sum: "$basic_salary" }
+        }
+    }
+]);
+
+
+2. Total Dearness Allowance (DA) Based on Department and Designation
+
+db.employees.aggregate([
+    {
+        $group: {
+            _id: { department: "$department", designation: "$designation" },
+            total_da: { $sum: "$dearness_allowance" }
+        }
+    }
+]);
+
+
+3. Average HRA Based on Department and Designation
+
+db.employees.aggregate([
+    {
+        $group: {
+            _id: { department: "$department", designation: "$designation" },
+            average_hra: { $avg: "$hra" }
+        }
+    }
+]);
+
+
+4. Employee Getting Maximum Net Salary
+
+db.employees.aggregate([
+    {
+        $sort: { net_salary: -1 }
+    },
+    {
+        $limit: 1
+    }
+]);
+
+
+5. Employee Getting Minimum Net Salary
+
+db.employees.aggregate([
+    {
+        $sort: { net_salary: 1 }
+    },
+    {
+        $limit: 1
+    }
+]);
+
+
+6. Count of Employees Based on Department and Designation
+
+db.employees.aggregate([
+    {
+        $group: {
+            _id: { department: "$department", designation: "$designation" },
+            count: { $sum: 1 }
+        }
+    }
+]);
+
+
+ Explanation of the Queries
+
+- $group: Groups documents by the specified key(s) and performs aggregate functions such as sum, average, and count.
+- $sort: Sorts documents in ascending (1) or descending (-1) order based on the specified field.
+- $limit: Limits the result set to the specified number of documents.
+
+These queries will give you the summarized data as per the requirements.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
