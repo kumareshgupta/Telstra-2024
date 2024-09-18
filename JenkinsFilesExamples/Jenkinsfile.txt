@@ -1,0 +1,18 @@
+node {
+   stage('Checkout'){
+        git branch: 'master',
+        credentialsId: 'anjy',
+        url: 'https://anjy@del.tools.publicis.sapient.com/bitbucket/scm/pjba/pms-ui.git'
+   }
+    stage('S3 deploy'){
+        def node_version = 'nodejs'
+       withEnv( ["PATH+NODEJS=${tool node_version}"] ){
+           sh 'npm install'
+           sh 'npm install react-scripts@3.0.1'
+           sh 'npm add @babel/runtime'
+           sh 'rm -r build'
+           sh 'npm run build'
+           sh 'npm run deploy'
+       }
+    }
+}

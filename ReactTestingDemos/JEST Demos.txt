@@ -1,0 +1,749 @@
+JEST Demos
+==============================================================================
+Demo 1: Basic Rendering Test
+React Code:
+// Component to be tested
+import React from 'react';
+
+function Hello() {
+  return <h1>Hello, world!</h1>;
+}
+
+export default Hello;
+
+
+Jest Test Case:
+import React from 'react';
+import { render } from '@testing-library/react';
+import Hello from './Hello';
+
+test('renders hello message', () => {
+  const { getByText } = render(<Hello />);
+  expect(getByText('Hello, world!')).toBeInTheDocument();
+});
+
+
+
+Demo 2: Testing Component with Props
+React Code:
+
+// Component to be tested
+import React from 'react';
+
+function Greeting({ name }) {
+  return <h1>Hello, {name}!</h1>;
+}
+
+export default Greeting;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render } from '@testing-library/react';
+import Greeting from './Greeting';
+
+test('renders personalized greeting message', () => {
+  const { getByText } = render(<Greeting name="Ram" />);
+  expect(getByText('Hello, Ram!')).toBeInTheDocument();
+});
+
+
+
+Demo 3: Testing Button Click Event
+React Code:
+
+// Component to be tested
+import React, { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <div>
+      <p>{count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+}
+
+export default Counter;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react';
+import Counter from './Counter';
+
+test('increments counter when button is clicked', () => {
+  const { getByText } = render(<Counter />);
+  const button = getByText('Increment');
+  
+  fireEvent.click(button);
+  expect(getByText('1')).toBeInTheDocument();
+});
+
+
+
+Demo 5: Testing Conditional Rendering
+React Code:
+
+// Component to be tested
+import React, { useState } from 'react';
+
+function Toggle() {
+  const [isOn, setIsOn] = useState(false);
+  return (
+    <div>
+      <button onClick={() => setIsOn(!isOn)}>Toggle</button>
+      {isOn ? <p>On</p> : <p>Off</p>}
+    </div>
+  );
+}
+
+export default Toggle;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react';
+import Toggle from './Toggle';
+
+test('toggles between On and Off when button is clicked', () => {
+  const { getByText } = render(<Toggle />);
+  const button = getByText('Toggle');
+  
+  expect(getByText('Off')).toBeInTheDocument();
+  
+  fireEvent.click(button);
+  expect(getByText('On')).toBeInTheDocument();
+  
+  fireEvent.click(button);
+  expect(getByText('Off')).toBeInTheDocument();
+});
+
+
+---
+
+Demo 6: Testing Asynchronous Functionality
+React Code:
+
+// Component to be tested
+import React, { useState, useEffect } from 'react';
+
+function FetchData() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setData('Fetched Data');
+    }, 1000);
+  }, []);
+
+  return <div>{data ? data : 'Loading...'}</div>;
+}
+
+export default FetchData;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render, waitFor } from '@testing-library/react';
+import FetchData from './FetchData';
+
+test('renders fetched data after loading', async () => {
+  const { getByText } = render(<FetchData />);
+  
+  expect(getByText('Loading...')).toBeInTheDocument();
+  
+  await waitFor(() => expect(getByText('Fetched Data')).toBeInTheDocument());
+});
+
+
+
+
+Demo 7: Testing Forms and Input Fields
+React Code:
+
+// Component to be tested
+import React, { useState } from 'react';
+
+function NameForm() {
+  const [name, setName] = useState('');
+
+  return (
+    <form>
+      <input 
+        type="text" 
+        value={name} 
+        onChange={(e) => setName(e.target.value)} 
+        placeholder="Enter your name" 
+      />
+      <p>{name ? Hello, ${name}! : 'Please enter your name.'}</p>
+    </form>
+  );
+}
+
+export default NameForm;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react';
+import NameForm from './NameForm';
+
+test('updates input value and renders greeting message', () => {
+  const { getByPlaceholderText, getByText } = render(<NameForm />);
+  
+  const input = getByPlaceholderText('Enter your name');
+  fireEvent.change(input, { target: { value: 'John' } });
+  
+  expect(getByText('Hello, John!')).toBeInTheDocument();
+});
+
+
+Demo 8: getAllByText - Retrieving Multiple Elements
+getAllBy is used to retrieve multiple elements that match a condition. If no element is found, it throws an error.
+
+React Code:
+
+// Component to be tested
+import React from 'react';
+
+function FruitsList() {
+  return (
+    <ul>
+      <li>Apple</li>
+      <li>Banana</li>
+      <li>Orange</li>
+      <li>Banana</li>
+    </ul>
+  );
+}
+
+export default FruitsList;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render } from '@testing-library/react';
+import FruitsList from './FruitsList';
+
+test('retrieves all elements with the text "Banana"', () => {
+  const { getAllByText } = render(<FruitsList />);
+  const bananas = getAllByText('Banana');
+  expect(bananas.length).toBe(2);  // We have two "Banana" elements
+});
+
+
+---
+
+Demo 9: findByText - Asynchronous Find for a Single Element
+findBy is used when testing asynchronous elements. It returns a promise that resolves when the element is found or rejects if it doesn't find it within the default timeout.
+
+React Code:
+
+// Component to be tested
+import React, { useState, useEffect } from 'react';
+
+function AsyncGreeting() {
+  const [greeting, setGreeting] = useState(null);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setGreeting('Hello, John!');
+    }, 1000);
+  }, []);
+
+  return <div>{greeting ? greeting : 'Loading...'}</div>;
+}
+
+export default AsyncGreeting;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render, findByText } from '@testing-library/react';
+import AsyncGreeting from './AsyncGreeting';
+
+test('finds greeting message after loading', async () => {
+  const { findByText } = render(<AsyncGreeting />);
+  const greeting = await findByText('Hello, John!');
+  expect(greeting).toBeInTheDocument();
+});
+
+
+
+
+Demo 10: findAllByText - Asynchronous Find for Multiple Elements
+findAllBy is similar to findBy, but it waits for multiple elements to appear and returns them as an array. It resolves the promise when all matching elements are found.
+
+React Code:
+
+// Component to be tested
+import React, { useState, useEffect } from 'react';
+
+function DelayedFruitsList() {
+  const [fruits, setFruits] = useState([]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setFruits(['Apple', 'Banana', 'Banana']);
+    }, 1000);
+  }, []);
+
+  return (
+    <ul>
+      {fruits.map((fruit, index) => (
+        <li key={index}>{fruit}</li>
+      ))}
+    </ul>
+  );
+}
+
+export default DelayedFruitsList;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render, findAllByText } from '@testing-library/react';
+import DelayedFruitsList from './DelayedFruitsList';
+
+test('finds all instances of "Banana" after loading', async () => {
+  const { findAllByText } = render(<DelayedFruitsList />);
+  const bananas = await findAllByText('Banana');
+  expect(bananas.length).toBe(2);  // Two "Banana" elements are rendered
+});
+
+
+
+
+Demo 11: queryByText - Non-Throwing Query for a Single Element
+queryBy is used to query an element that may or may not be present. It doesn’t throw an error if no element is found, unlike getBy.
+
+React Code:
+
+// Component to be tested
+import React from 'react';
+
+function ConditionalMessage({ showMessage }) {
+  return <div>{showMessage ? 'Welcome!' : null}</div>;
+}
+
+export default ConditionalMessage;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render, queryByText } from '@testing-library/react';
+import ConditionalMessage from './ConditionalMessage';
+
+test('does not find the message when showMessage is false', () => {
+  const { queryByText } = render(<ConditionalMessage showMessage={false} />);
+  const message = queryByText('Welcome!');
+  expect(message).toBeNull();  // Message is not rendered
+});
+
+test('finds the message when showMessage is true', () => {
+  const { queryByText } = render(<ConditionalMessage showMessage={true} />);
+  const message = queryByText('Welcome!');
+  expect(message).toBeInTheDocument();  // Message is rendered
+});
+
+
+
+
+Demo 12: queryAllByText - Non-Throwing Query for Multiple Elements
+queryAllBy is used to query multiple elements that may or may not be present. It returns an empty array if no elements are found instead of throwing an error.
+
+React Code:
+
+// Component to be tested
+import React from 'react';
+
+function FruitBowl() {
+  return (
+    <ul>
+      <li>Apple</li>
+      <li>Banana</li>
+      <li>Orange</li>
+    </ul>
+  );
+}
+
+export default FruitBowl;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render, queryAllByText } from '@testing-library/react';
+import FruitBowl from './FruitBowl';
+
+test('does not find non-existent fruit', () => {
+  const { queryAllByText } = render(<FruitBowl />);
+  const grapes = queryAllByText('Grapes');
+  expect(grapes.length).toBe(0);  // "Grapes" does not exist in the list
+});
+
+test('finds all instances of an existing fruit', () => {
+  const { queryAllByText } = render(<FruitBowl />);
+  const apples = queryAllByText('Apple');
+  expect(apples.length).toBe(1);  // "Apple" exists once in the list
+});
+
+
+---
+
+===========================================================================================================================
+Mocking 
+
+Demo 13
+math.js
+export function sum(a, b) {
+  return a + b;
+}
+
+export function multiply(a, b) {
+  return a * b;
+}
+
+Jest Test Case :
+// math.test.js
+import { sum } from "../math";
+import { multiply } from "../math";
+
+jest.mock("../math"); // This tells Jest to mock the entire module
+
+test("mocking sum function", () => {
+  // We control what the mock function returns
+  sum.mockReturnValue(40);
+
+  // Call the mocked function
+  const result = sum(10, 5);
+
+  // Expect it to return 42 instead of 15
+  expect(result).toBe(40);
+
+  // We can check how many times the function was called
+  expect(sum).toHaveBeenCalledTimes(1);
+
+  // We can also verify that it was called with the correct arguments
+  expect(sum).toHaveBeenCalledWith(10, 5);
+});
+
+// math.test.js
+
+test("mocking multiply with custom implementation", () => {
+  multiply.mockImplementation((a, b) => a * b);
+
+  const result = multiply(2, 3);
+
+  expect(result).toBe(6); // 2 * 3 = 6
+});
+ 
+===========================================================================================================================
+
+Demo 14: Mocking Functions
+React Code:
+
+// Component to be tested
+import React from 'react';
+
+function Button({ onClick, children }) {
+  return <button onClick={onClick}>{children}</button>;
+}
+
+export default Button;
+
+
+
+Jest Test Case:
+
+
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react';
+import Button from './Button';
+
+test('calls onClick handler when button is clicked', () => {
+  const handleClick = jest.fn(); // fn creates mock function
+  const { getByText } = render(<Button onClick={handleClick}>Click me</Button>);
+  
+  fireEvent.click(getByText('Click me'));
+  expect(handleClick).toHaveBeenCalledTimes(1);
+});
+
+
+
+Demo 15: Mocking a Function Prop
+jest.fn() is used to create a mock function for a component prop, and you can test whether this function gets called when an event is triggered.
+
+React Code:
+
+// Component to be tested
+import React from 'react';
+
+function Button({ onClick }) {
+  return <button onClick={onClick}>Click me</button>;
+}
+
+export default Button;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react';
+import Button from './Button';
+
+test('calls onClick prop when clicked', () => {
+  const handleClick = jest.fn(); // Create mock function
+  const { getByText } = render(<Button onClick={handleClick} />);
+  
+  fireEvent.click(getByText('Click me'));  // Simulate button click
+
+  expect(handleClick).toHaveBeenCalled();  // Check if mock function was called
+});
+
+
+---
+
+Demo 16: Testing Function Call with Specific Arguments
+You can use jest.fn() to mock a function and check whether it was called with the expected arguments.
+
+React Code:
+
+// Component to be tested
+import React from 'react';
+
+function GreetUser({ onGreet }) {
+  return (
+    <button onClick={() => onGreet('John')}>Greet</button>
+  );
+}
+
+export default GreetUser;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react';
+import GreetUser from './GreetUser';
+
+test('calls onGreet with the correct argument when clicked', () => {
+  const greetMock = jest.fn();  // Create mock function
+  const { getByText } = render(<GreetUser onGreet={greetMock} />);
+  
+  fireEvent.click(getByText('Greet'));  // Simulate button click
+
+  expect(greetMock).toHaveBeenCalledWith('John');  // Check if mock function was called with 'John'
+});
+
+
+
+
+Demo 17: Mocking a Return Value with mockReturnValue
+You can mock the return value of a function using jest.fn().mockReturnValue() and test how it affects your component behavior.
+
+React Code:
+
+// Component to be tested
+import React from 'react';
+
+function Greeting({ getGreeting }) {
+  return <div>{getGreeting()}</div>;
+}
+
+export default Greeting;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render } from '@testing-library/react';
+import Greeting from './Greeting';
+
+test('renders the greeting returned by getGreeting', () => {
+  const getGreetingMock = jest.fn().mockReturnValue('Hello, John!');  // Mock return value
+  const { getByText } = render(<Greeting getGreeting={getGreetingMock} />);
+  
+  expect(getByText('Hello, John!')).toBeInTheDocument();  // Check if the mock return value is rendered
+});
+
+
+
+Demo 18: Tracking the Number of Times a Function is Called
+You can use jest.fn() to count how many times a function is called.
+
+React Code:
+
+// Component to be tested
+import React from 'react';
+
+function Counter({ onIncrement }) {
+  return <button onClick={onIncrement}>Increment</button>;
+}
+
+export default Counter;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react';
+import Counter from './Counter';
+
+test('calls onIncrement twice when clicked twice', () => {
+  const incrementMock = jest.fn();  // Create mock function
+  const { getByText } = render(<Counter onIncrement={incrementMock} />);
+  
+  fireEvent.click(getByText('Increment'));  // Simulate first click
+  fireEvent.click(getByText('Increment'));  // Simulate second click
+
+  expect(incrementMock).toHaveBeenCalledTimes(2);  // Check if mock function was called twice
+});
+
+
+---
+
+Demo 19: Mocking an Asynchronous Function
+You can use jest.fn() to mock asynchronous functions, allowing you to simulate async behavior in tests.
+
+React Code:
+
+// Component to be tested
+import React, { useState } from 'react';
+
+function FetchDataButton({ fetchData }) {
+  const [data, setData] = useState('');
+
+  const handleClick = async () => {
+    const result = await fetchData();
+    setData(result);
+  };
+
+  return (
+    <div>
+      <button onClick={handleClick}>Fetch Data</button>
+      <p>{data}</p>
+    </div>
+  );
+}
+
+export default FetchDataButton;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render, fireEvent, waitFor } from '@testing-library/react';
+import FetchDataButton from './FetchDataButton';
+
+test('fetches and displays data when button is clicked', async () => {
+  const fetchDataMock = jest.fn().mockResolvedValue('Fetched Data');  // Mock async function
+  const { getByText } = render(<FetchDataButton fetchData={fetchDataMock} />);
+  
+  fireEvent.click(getByText('Fetch Data'));  // Simulate button click
+  
+  const dataElement = await waitFor(() => getByText('Fetched Data'));  // Wait for async action
+  
+  expect(dataElement).toBeInTheDocument();  // Check if the fetched data is displayed
+});
+
+
+
+Demo 20: Mocking a Function with Different Return Values for Each Call
+You can mock a function to return different values for each call using mockImplementationOnce().
+
+React Code:
+
+// Component to be tested
+import React, { useState } from 'react';
+
+function RandomNumberButton({ getRandomNumber }) {
+  const [number, setNumber] = useState(null);
+
+  const handleClick = () => {
+    setNumber(getRandomNumber());
+  };
+
+  return (
+    <div>
+      <button onClick={handleClick}>Get Random Number</button>
+      {number !== null && <p>Random Number: {number}</p>}
+    </div>
+  );
+}
+
+export default RandomNumberButton;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react';
+import RandomNumberButton from './RandomNumberButton';
+
+test('returns different random numbers on each click', () => {
+  const getRandomNumberMock = jest
+    .fn()
+    .mockImplementationOnce(() => 42)  // First call returns 42
+    .mockImplementationOnce(() => 17);  // Second call returns 17
+  
+  const { getByText } = render(<RandomNumberButton getRandomNumber={getRandomNumberMock} />);
+  
+  fireEvent.click(getByText('Get Random Number'));  // First click
+  expect(getByText('Random Number: 42')).toBeInTheDocument();
+  
+  fireEvent.click(getByText('Get Random Number'));  // Second click
+  expect(getByText('Random Number: 17')).toBeInTheDocument();
+});
+
+
+
+Demo 21: Resetting Mocks with mockClear and mockReset
+You can reset the state of a mock function using mockClear() or mockReset() to ensure a fresh start between tests.
+
+React Code:
+
+// Component to be tested
+import React from 'react';
+
+function ClickButton({ onClick }) {
+  return <button onClick={onClick}>Click me</button>;
+}
+
+export default ClickButton;
+
+
+Jest Test Case:
+
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react';
+import ClickButton from './ClickButton';
+
+test('resets mock between tests', () => {
+  const clickMock = jest.fn();  // Create mock function
+  
+  const { getByText } = render(<ClickButton onClick={clickMock} />);
+  
+  fireEvent.click(getByText('Click me'));  // First click
+  expect(clickMock).toHaveBeenCalledTimes(1);  // Check first call
+  
+  clickMock.mockClear();  // Clear mock call history
+  
+  fireEvent.click(getByText('Click me'));  // Second click
+  expect(clickMock).toHaveBeenCalledTimes(1);  // After reset, it is called once again
+});
+
+
+---
+

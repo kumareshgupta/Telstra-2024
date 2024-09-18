@@ -1,0 +1,14 @@
+node{
+	for(int i=0; i<2; i++){
+	  stage "Stage #" +i
+		print 'Welcome'
+		if(i==0){
+			git ""
+			echo 'Running on Stage #0'
+		}
+		else{
+			build 'Declarative pipeline'
+			echo 'Running on Stage #1'
+		}
+}
+}
