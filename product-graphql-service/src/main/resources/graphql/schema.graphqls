@@ -1,0 +1,26 @@
+type Product{
+	id:ID
+	name:String
+	category:String
+	price:Float
+	stock:Int
+}
+
+type Query{
+	getAllProducts:[Product]
+	getProductById(id:Int):Product
+}
+
+input ProductDTO{
+	id:ID
+	name:String
+	category:String
+	price:Float
+	stock:Int
+}
+
+
+type Mutation{
+	addProduct(product:ProductDTO):Product
+	updateProduct(product:ProductDTO):Product
+}
